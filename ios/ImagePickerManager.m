@@ -316,7 +316,10 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
                     Byte *buffer = (Byte*)malloc(rep.size);
                     NSUInteger buffered = [rep getBytes:buffer fromOffset:0.0 length:rep.size error:nil];
                     NSData *data = [NSData dataWithBytesNoCopy:buffer length:buffered freeWhenDone:YES];
-                    [data writeToFile:path atomically:YES];
+                    if(![data writeToFile:path atomically:YES]) {
+                        self.callback(@[@{@"error": @"Could not write file"}]);
+                        return;
+                    }
 
                     NSMutableDictionary *gifResponse = [[NSMutableDictionary alloc] init];
                     [gifResponse setObject:@(image.size.width) forKey:@"width"];
@@ -367,7 +370,11 @@ RCT_EXPORT_METHOD(showImagePicker:(NSDictionary *)options callback:(RCTResponseS
             else {
                 data = UIImageJPEGRepresentation(image, [[self.options valueForKey:@"quality"] floatValue]);
             }
-            [data writeToFile:path atomically:YES];
+
+            if(![data writeToFile:path atomically:YES]) {
+                self.callback(@[@{@"error": @"Could not write file"}]);
+                return;
+            }
 
             if (![[self.options objectForKey:@"noData"] boolValue]) {
                 NSString *dataString = [data base64EncodedStringWithOptions:0]; // base64 encoded image string
